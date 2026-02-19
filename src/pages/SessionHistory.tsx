@@ -1,15 +1,32 @@
 import { TopBar } from "@/components/layout/TopBar";
-import { sessions } from "@/lib/mockData";
+import { sessions as initialSessions } from "@/lib/mockData";
+import { fetchMetrics } from "@/lib/api";
 import { Clock, ChevronDown, Filter, Play } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const SessionHistory = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterEmotion, setFilterEmotion] = useState("all");
+  const [metrics, setMetrics] = useState<any>(null);
+
+  useEffect(() => {
+    const loadMetrics = async () => {
+      const data = await fetchMetrics();
+      if (data) {
+        setMetrics(data);
+      }
+    };
+
+    loadMetrics();
+    const interval = setInterval(loadMetrics, 1000); // Poll every second
+    return () => clearInterval(interval);
+  }, []);
+
+  const sessions = metrics?.sessions || initialSessions;
 
   const filtered = filterEmotion === "all"
     ? sessions
-    : sessions.filter((s) => s.dominantEmotion.toLowerCase() === filterEmotion);
+    : sessions.filter((s: any) => s.dominantEmotion.toLowerCase() === filterEmotion);
 
   return (
     <div className="min-h-screen">
@@ -20,17 +37,16 @@ const SessionHistory = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Filter className="h-3.5 w-3.5" />
-            <span>Filter:</span>
+            <span className="text-gray-400">Filter:</span>
           </div>
           {["all", "focus", "joy", "neutral", "frustration"].map((f) => (
             <button
               key={f}
               onClick={() => setFilterEmotion(f)}
-              className={`px-3 py-1 rounded-full text-xs capitalize transition-colors ${
-                filterEmotion === f
+              className={`px-3 py-1 rounded-full text-xs capitalize transition-colors ${filterEmotion === f
                   ? "bg-primary/15 text-primary border border-primary/30"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
+                  : "bg-muted text-gray-400 hover:text-white"
+                }`}
             >
               {f}
             </button>
@@ -51,9 +67,9 @@ const SessionHistory = () => {
                 onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
                 className="w-full grid grid-cols-6 gap-4 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
               >
-                <span className="text-xs font-mono text-foreground">{session.id}</span>
-                <span className="text-xs text-muted-foreground">{session.date}</span>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="text-xs font-mono text-gray-200">{session.id}</span>
+                <span className="text-xs text-gray-400">{session.date}</span>
+                <div className="flex items-center gap-1 text-xs text-gray-400">
                   <Clock className="h-3 w-3" />
                   {session.duration}
                 </div>
@@ -64,21 +80,19 @@ const SessionHistory = () => {
                       style={{ width: `${session.engagement}%` }}
                     />
                   </div>
-                  <span className="text-xs font-mono text-foreground">{session.engagement}%</span>
+                  <span className="text-xs font-mono text-gray-200">{session.engagement}%</span>
                 </div>
-                <span className="text-xs text-foreground">{session.dominantEmotion}</span>
+                <span className="text-xs text-gray-200">{session.dominantEmotion}</span>
                 <div className="flex items-center justify-between">
                   <span
-                    className={`text-xs font-mono ${
-                      session.status === "flagged" ? "text-warning" : "text-success"
-                    }`}
+                    className={`text-xs font-mono ${session.status === "flagged" ? "text-warning" : "text-success"
+                      }`}
                   >
                     {session.status}
                   </span>
                   <ChevronDown
-                    className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${
-                      expandedId === session.id ? "rotate-180" : ""
-                    }`}
+                    className={`h-3.5 w-3.5 text-gray-400 transition-transform ${expandedId === session.id ? "rotate-180" : ""
+                      }`}
                   />
                 </div>
               </button>
@@ -87,10 +101,10 @@ const SessionHistory = () => {
                 <div className="px-4 pb-4 border-b border-border animate-fade-up">
                   <div className="rounded-md bg-muted/30 p-4 flex items-center justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs text-foreground">
+                      <p className="text-xs text-gray-300">
                         Dominant emotion: <span className="font-medium">{session.dominantEmotion}</span>
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-gray-400">
                         Average engagement maintained at {session.engagement}% throughout session.
                       </p>
                     </div>

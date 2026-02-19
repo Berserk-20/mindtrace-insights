@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import {
   BarChart3,
@@ -14,19 +15,54 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { engagementData } from "@/lib/mockData";
-
-const weeklyData = [
-  { day: "Mon", avg: 72 },
-  { day: "Tue", avg: 78 },
-  { day: "Wed", avg: 65 },
-  { day: "Thu", avg: 81 },
-  { day: "Fri", avg: 74 },
-  { day: "Sat", avg: 68 },
-  { day: "Sun", avg: 55 },
-];
+import { fetchReports } from "@/lib/api";
 
 const Reports = () => {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadReports = async () => {
+      try {
+        const reportData = await fetchReports();
+        if (reportData) {
+          setData(reportData);
+        }
+      } catch (err) {
+        console.error("Failed to load reports", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadReports();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen text-foreground p-6">
+        <TopBar title="Engagement Reports" subtitle="Weekly and trend analysis" />
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback if data is null (e.g. API error)
+  if (!data) {
+    return (
+      <div className="min-h-screen text-foreground p-6">
+        <TopBar title="Engagement Reports" subtitle="Weekly and trend analysis" />
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">No data available.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { weeklyData, summary, hourlyData } = data;
+
   return (
     <div className="min-h-screen">
       <TopBar title="Engagement Reports" subtitle="Weekly and trend analysis" />
@@ -35,10 +71,10 @@ const Reports = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-4 gap-4">
           {[
-            { icon: BarChart3, label: "Avg Engagement", value: "76.2%", sub: "This week" },
-            { icon: TrendingUp, label: "Trend", value: "+4.3%", sub: "vs last week" },
-            { icon: Users, label: "Sessions", value: "34", sub: "This week" },
-            { icon: Clock, label: "Avg Duration", value: "1h 28m", sub: "Per session" },
+            { icon: BarChart3, label: "Avg Engagement", value: summary.avgEngagement, sub: "Total Average" },
+            { icon: TrendingUp, label: "Trend", value: summary.trend, sub: "vs last week" },
+            { icon: Users, label: "Total Sessions", value: summary.totalSessions, sub: "All time" },
+            { icon: Clock, label: "Avg Duration", value: summary.avgDuration, sub: "Per session" },
           ].map((item) => (
             <div key={item.label} className="card-surface p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -63,21 +99,21 @@ const Reports = () => {
                     <stop offset="95%" stopColor="hsl(187, 80%, 48%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(225, 15%, 15%)" />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(215, 15%, 50%)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(215, 15%, 50%)" }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(225, 22%, 9%)", border: "1px solid hsl(225, 15%, 15%)", borderRadius: "6px", fontSize: "11px" }} />
-                <Area type="monotone" dataKey="avg" stroke="hsl(187, 80%, 48%)" fill="url(#weekGrad)" strokeWidth={2} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px", color: "hsl(var(--popover-foreground))" }} />
+                <Area type="monotone" dataKey="avg" stroke="hsl(var(--primary))" fill="url(#weekGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Hourly Heatmap Proxy */}
+        {/* Hourly Heatmap */}
         <div className="card-surface p-4">
-          <h3 className="data-label mb-4">Hourly Engagement Heatmap</h3>
+          <h3 className="data-label mb-4">Avg Engagement by Hour of Day</h3>
           <div className="grid grid-cols-12 gap-1">
-            {engagementData.slice(0, 24).map((d, i) => {
+            {hourlyData.map((d: any, i: number) => {
               const intensity = d.engagement / 100;
               return (
                 <div

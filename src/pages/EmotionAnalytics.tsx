@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { TopBar } from "@/components/layout/TopBar";
-import { emotionDistribution, emotionTransitions, emotionTimelineData } from "@/lib/mockData";
+import { emotionDistribution as initialEmotionDistribution, emotionTransitions as initialEmotionTransitions } from "@/lib/mockData";
+import { fetchMetrics } from "@/lib/api";
 import {
   PieChart,
   Pie,
@@ -20,17 +22,37 @@ const emotionDescriptions: Record<string, string> = {
   Neutral: "Baseline emotional state. May indicate passive engagement or habitual behavior.",
   Surprise: "Heightened alertness. Often precedes curiosity or confusion depending on context.",
   Frustration: "Cognitive friction state. May signal difficulty or poor UX. Monitor for disengagement.",
+  Happy: "Positive emotional state. Indicates satisfaction and enjoyment.",
+  Sad: "Low arousal negative state. May indicate disengagement or disappointment.",
+  Fear: "High arousal negative state. Response to perceived threat or anxiety.",
+  Disgust: "Strong aversion response. May indicate offensive content or bad UX.",
+  Angry: "Active hostility or annoyance. Strong negative reaction to stimuli.",
 };
 
 const EmotionAnalytics = () => {
-  // Per-session dominant emotion bar data
-  const sessionEmotions = [
-    { session: "S-1024", Focus: 45, Joy: 25, Neutral: 15, Frustration: 10, Surprise: 5 },
-    { session: "S-1023", Focus: 30, Joy: 15, Neutral: 35, Frustration: 12, Surprise: 8 },
-    { session: "S-1022", Focus: 20, Joy: 50, Neutral: 18, Frustration: 5, Surprise: 7 },
-    { session: "S-1021", Focus: 15, Joy: 10, Neutral: 20, Frustration: 42, Surprise: 13 },
-    { session: "S-1020", Focus: 40, Joy: 22, Neutral: 20, Frustration: 10, Surprise: 8 },
-  ];
+  const [metrics, setMetrics] = useState<any>(null);
+
+  useEffect(() => {
+    const loadMetrics = async () => {
+      const data = await fetchMetrics();
+      if (data) {
+        setMetrics(data);
+      }
+    };
+
+    loadMetrics();
+    const interval = setInterval(loadMetrics, 1000); // Poll every second
+    return () => clearInterval(interval);
+  }, []);
+
+  // Use real data from API if available and not empty, otherwise fall back to initial/mock data for demo
+  const emotionDistribution = (metrics?.emotionDistribution && metrics.emotionDistribution.length > 0)
+    ? metrics.emotionDistribution
+    : initialEmotionDistribution;
+  const emotionTransitions = metrics?.emotionTransitions || initialEmotionTransitions;
+
+  // Per-session dominant emotion bar data (Real data from API)
+  const sessionEmotions = metrics?.sessionEmotions || [];
 
   return (
     <div className="min-h-screen">
@@ -53,16 +75,17 @@ const EmotionAnalytics = () => {
                     dataKey="value"
                     stroke="none"
                   >
-                    {emotionDistribution.map((entry, i) => (
+                    {emotionDistribution.map((entry: any, i: number) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(225, 22%, 9%)",
-                      border: "1px solid hsl(225, 15%, 15%)",
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
                       fontSize: "11px",
+                      color: "hsl(var(--popover-foreground))",
                     }}
                     formatter={(value: number, name: string) => [`${value}%`, name]}
                   />
@@ -70,7 +93,7 @@ const EmotionAnalytics = () => {
               </ResponsiveContainer>
             </div>
             <div className="space-y-1.5 mt-2">
-              {emotionDistribution.map((e) => (
+              {emotionDistribution.map((e: any) => (
                 <div key={e.emotion} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full" style={{ backgroundColor: e.color }} />
@@ -88,32 +111,33 @@ const EmotionAnalytics = () => {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sessionEmotions} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(225, 15%, 15%)" horizontal={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                   <XAxis
                     type="number"
-                    tick={{ fontSize: 10, fill: "hsl(215, 15%, 50%)" }}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                     axisLine={false}
                     tickLine={false}
                   />
                   <YAxis
                     type="category"
                     dataKey="session"
-                    tick={{ fontSize: 10, fill: "hsl(215, 15%, 50%)" }}
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                     axisLine={false}
                     tickLine={false}
                     width={60}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(225, 22%, 9%)",
-                      border: "1px solid hsl(225, 15%, 15%)",
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
                       borderRadius: "6px",
                       fontSize: "11px",
+                      color: "hsl(var(--popover-foreground))",
                     }}
                   />
                   <Bar dataKey="Focus" stackId="a" fill="hsl(187, 80%, 48%)" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="Joy" stackId="a" fill="hsl(152, 60%, 45%)" />
-                  <Bar dataKey="Neutral" stackId="a" fill="hsl(215, 15%, 50%)" />
+                  <Bar dataKey="Neutral" stackId="a" fill="hsl(215, 15%, 65%)" />
                   <Bar dataKey="Frustration" stackId="a" fill="hsl(0, 72%, 51%)" />
                   <Bar dataKey="Surprise" stackId="a" fill="hsl(38, 92%, 50%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
@@ -128,10 +152,10 @@ const EmotionAnalytics = () => {
           <div className="card-surface p-4">
             <h3 className="data-label mb-4">Emotion Transitions</h3>
             <div className="space-y-2">
-              {emotionTransitions.map((t, i) => (
+              {emotionTransitions.map((t: any, i: number) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/30 transition-colors"
+                  className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-foreground font-medium">{t.from}</span>
@@ -154,17 +178,18 @@ const EmotionAnalytics = () => {
 
           {/* Psychological Meanings */}
           <div className="card-surface p-4">
-            <h3 className="data-label mb-4">Emotion Glossary</h3>
+            <h3 className="data-label mb-4">Emotion Distribution</h3>
             <div className="space-y-3">
-              {Object.entries(emotionDescriptions).map(([emotion, desc]) => {
-                const dist = emotionDistribution.find((e) => e.emotion === emotion);
+              {emotionDistribution.map((e: any) => {
+                const desc = emotionDescriptions[e.emotion] || "No description available for this emotion.";
                 return (
-                  <div key={emotion} className="p-3 rounded-md bg-muted/30">
-                    <div className="flex items-center gap-2 mb-1">
-                      {dist && (
-                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: dist.color }} />
-                      )}
-                      <span className="text-sm font-medium text-foreground">{emotion}</span>
+                  <div key={e.emotion} className="p-3 rounded-md bg-muted/30">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: e.color }} />
+                        <span className="text-sm font-medium text-foreground">{e.emotion}</span>
+                      </div>
+                      <span className="text-xs font-mono text-muted-foreground">{e.value}%</span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
                   </div>

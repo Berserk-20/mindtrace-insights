@@ -58,7 +58,7 @@ export const sessions = [
 export const emotionDistribution = [
   { emotion: "Joy", value: 28, color: "hsl(152, 60%, 45%)" },
   { emotion: "Focus", value: 35, color: "hsl(187, 80%, 48%)" },
-  { emotion: "Neutral", value: 18, color: "hsl(215, 15%, 50%)" },
+  { emotion: "Neutral", value: 18, color: "hsl(215, 15%, 70%)" },
   { emotion: "Surprise", value: 8, color: "hsl(38, 92%, 50%)" },
   { emotion: "Frustration", value: 11, color: "hsl(0, 72%, 51%)" },
 ];
