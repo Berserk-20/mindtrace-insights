@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Users, Radio, Brain, Calendar, BarChart3 } from "lucide-react";
 
+import { API_BASE_URL } from "@/lib/api";
+
 interface AdminStats {
     stats: {
         totalUsers: number;
@@ -29,7 +31,7 @@ export function AdminDashboard() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await fetch("http://localhost:8000/api/admin/stats", {
+                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

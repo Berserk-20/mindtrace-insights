@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import { liveMetrics as initialLiveMetrics } from "@/lib/mockData";
-import { fetchMetrics, startSession, stopSession, pauseSession, resumeSession } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Radio, Eye, Activity, AlertTriangle, Zap, Clock } from "lucide-react";
@@ -163,7 +163,7 @@ const LiveSession = () => {
                 <>
                   {/* Live Video Feed */}
                   <img
-                    src="http://localhost:8000/video"
+                    src={`${API_BASE_URL}/video`}
                     alt="Live Camera Feed"
                     className="absolute inset-0 w-full h-full object-cover"
                     onLoad={() => setVideoAvailable(true)}
