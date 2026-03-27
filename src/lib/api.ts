@@ -36,47 +36,72 @@ export const fetchMetrics = async () => {
 };
 
 export const startSession = async () => {
-  const res = await fetch(`${API_BASE_URL}/start`, {
-    headers: getAuthHeaders()
-  });
-  if (res.status === 401) {
-    window.location.href = "/login";
-    return null;
+  try {
+    console.log("Starting session using API:", API_BASE_URL);
+    const res = await fetch(`${API_BASE_URL}/start`, {
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) {
+      window.location.href = "/login";
+      return null;
+    }
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Failed to start session");
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error starting session:", error);
+    throw error;
   }
-  return res.json();
 };
 
 export const pauseSession = async () => {
-  const res = await fetch(`${API_BASE_URL}/pause`, {
-    headers: getAuthHeaders()
-  });
-  if (res.status === 401) {
-    window.location.href = "/login";
-    return null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/pause`, {
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) {
+      window.location.href = "/login";
+      return null;
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error pausing session:", error);
+    throw error;
   }
-  return res.json();
 };
 
 export const resumeSession = async () => {
-  const res = await fetch(`${API_BASE_URL}/resume`, {
-    headers: getAuthHeaders()
-  });
-  if (res.status === 401) {
-    window.location.href = "/login";
-    return null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/resume`, {
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) {
+      window.location.href = "/login";
+      return null;
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error resuming session:", error);
+    throw error;
   }
-  return res.json();
 };
 
 export const stopSession = async () => {
-  const res = await fetch(`${API_BASE_URL}/stop`, {
-    headers: getAuthHeaders()
-  });
-  if (res.status === 401) {
-    window.location.href = "/login";
-    return null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/stop`, {
+      headers: getAuthHeaders()
+    });
+    if (res.status === 401) {
+      window.location.href = "/login";
+      return null;
+    }
+    return res.json();
+  } catch (error) {
+    console.error("Error stopping session:", error);
+    throw error;
   }
-  return res.json();
 };
 
 export const fetchSessions = async () => {
