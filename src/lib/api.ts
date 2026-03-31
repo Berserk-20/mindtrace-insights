@@ -1,6 +1,6 @@
 
 // Use environment variable for production, fallback to localhost for dev
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://iracund-placidly-van.ngrok-free.dev";
+export const API_BASE_URL ="https://iracund-placidly-van.ngrok-free.dev";
 
 /**
  * Get authorization headers with JWT token
