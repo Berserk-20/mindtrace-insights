@@ -36,6 +36,27 @@ export const fetchMetrics = async () => {
   }
 };
 
+export const fetchLiveMetrics = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/metrics/live`, {
+      headers: getAuthHeaders()
+    });
+
+    if (response.status === 401) {
+      window.location.href = "/login";
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch live metrics:", error);
+    return null;
+  }
+};
+
 export const startSession = async () => {
   try {
     console.log("Starting session using API:", API_BASE_URL);

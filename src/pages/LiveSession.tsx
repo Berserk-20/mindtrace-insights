@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { TopBar } from "@/components/layout/TopBar";
 import { liveMetrics as initialLiveMetrics } from "@/lib/mockData";
-import { API_BASE_URL, fetchMetrics, startSession, stopSession, pauseSession, resumeSession } from "@/lib/api";
+import { API_BASE_URL, fetchLiveMetrics, startSession, stopSession, pauseSession, resumeSession } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Radio, Eye, Activity, AlertTriangle, Zap, Clock } from "lucide-react";
@@ -62,7 +62,7 @@ const LiveSession = () => {
 
   useEffect(() => {
     const loadMetrics = async () => {
-      const data = await fetchMetrics();
+      const data = await fetchLiveMetrics();
       if (data) {
         setMetrics(data);
         // Sync local state if backend says running
@@ -180,7 +180,7 @@ const LiveSession = () => {
                   if (res && res.agent_running) {
                     setAgentState({ running: res.agent_running, paused: false });
                     // Fetch fresh metrics to get session start time
-                    const data = await fetchMetrics();
+                    const data = await fetchLiveMetrics();
                     if (data) setMetrics(data);
                     toast({ title: "Session started" });
                   } else {
