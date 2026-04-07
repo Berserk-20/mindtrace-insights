@@ -24,14 +24,23 @@ export default function Signup() {
     try {
       const res = await fetch(`${API_BASE_URL}/signup`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true" 
+        },
         body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Signup failed");
+        let errorMessage = "Signup failed";
+        if (data.detail) {
+          errorMessage = typeof data.detail === 'string' 
+            ? data.detail 
+            : Array.isArray(data.detail) ? data.detail[0].msg : JSON.stringify(data.detail);
+        }
+        throw new Error(errorMessage);
       }
 
       toast({ title: "Success", description: "Account created successfully. Please login." });

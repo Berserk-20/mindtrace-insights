@@ -25,14 +25,23 @@ export default function Login() {
     try {
       const res = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true" 
+        },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.detail || "Login failed");
+        let errorMessage = "Login failed";
+        if (data.detail) {
+          errorMessage = typeof data.detail === 'string' 
+            ? data.detail 
+            : Array.isArray(data.detail) ? data.detail[0].msg : JSON.stringify(data.detail);
+        }
+        throw new Error(errorMessage);
       }
 
       login(data.user, data.token);
