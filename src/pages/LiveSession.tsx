@@ -30,6 +30,10 @@ const LiveSession = () => {
   const [frameUrl, setFrameUrl] = useState<string | undefined>(undefined);
   const [sessionDuration, setSessionDuration] = useState("00:00:00");
   const { toast } = useToast();
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const runningRef = useRef(false);
 
   // Timer effect for session duration
   useEffect(() => {
@@ -53,8 +57,6 @@ const LiveSession = () => {
     const interval = setInterval(updateDuration, 1000);
     return () => clearInterval(interval);
   }, [metrics?.liveMetrics?.sessionStartTime, agentState.running]);
-
-  const runningRef = useRef(false);
 
   useEffect(() => {
     runningRef.current = agentState.running;
@@ -86,70 +88,84 @@ const LiveSession = () => {
     };
   }, []);
 
-  // Frame fetcher effect for live video
+  // Client-side camera and analysis loop
   useEffect(() => {
+    let stream: MediaStream | null = null;
+    let isRunning = true;
+    
+    // Stop stream exactly when not running or paused
     if (!agentState.running || agentState.paused) {
-      if (frameUrl) {
-        URL.revokeObjectURL(frameUrl);
-        setFrameUrl(undefined);
-      }
+      setVideoAvailable(false);
       return;
     }
 
-    let abortController = new AbortController();
-    let isRunning = true;
-    
-    const fetchFrame = async () => {
-      if (!isRunning) return;
+    const startCameraAndLoop = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/frame`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true"
-          },
-          signal: abortController.signal
-        });
+        // Start local video stream giving the user a continuous view
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setVideoAvailable(true);
 
-        if (res.status === 204) {
-          // No frame yet
-          setVideoAvailable(false);
-          // Wait briefly before retrying if no frame
-          if (isRunning) setTimeout(loop, 100);
-          return;
-        }
+        const analyzeFrame = async () => {
+          if (!isRunning || !agentState.running || agentState.paused) return;
 
-        if (res.ok) {
-          const blob = await res.blob();
-          const url = URL.createObjectURL(blob);
-          setFrameUrl(prev => {
-            if (prev) URL.revokeObjectURL(prev);
-            return url;
-          });
-          setVideoAvailable(true);
-        } else {
-          setVideoAvailable(false);
-        }
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          console.error("Frame fetch error:", err);
-          setVideoAvailable(false);
-        }
+          try {
+            if (videoRef.current && canvasRef.current) {
+               const video = videoRef.current;
+               const canvas = canvasRef.current;
+               // Draw the current video frame to the hidden canvas
+               if (video.videoWidth > 0 && video.videoHeight > 0) {
+                 canvas.width = video.videoWidth;
+                 canvas.height = video.videoHeight;
+                 const ctx = canvas.getContext('2d');
+                 if (ctx) {
+                   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                   // Compress aggressively to save bandwidth since 1FPS demo
+                   const base64Image = canvas.toDataURL('image/jpeg', 0.5);
+                   
+                   // Post to backend
+                   const token = localStorage.getItem("token");
+                   await fetch(`${API_BASE_URL}/analyze_frame`, {
+                     method: 'POST',
+                     headers: {
+                       'Content-Type': 'application/json',
+                       "Authorization": `Bearer ${token}`,
+                       "ngrok-skip-browser-warning": "true"
+                     },
+                     body: JSON.stringify({ image_base64: base64Image })
+                   });
+                 }
+               }
+            }
+          } catch (e) {
+            console.error("Error analyzing frame:", e);
+          }
+
+          // Loop 1 frame per second to not overload backend
+          if (isRunning) {
+            setTimeout(analyzeFrame, 1000);
+          }
+        };
+
+        // Start local loop
+        analyzeFrame();
+
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+        setVideoAvailable(false);
+        toast({ title: "Camera access denied", description: "Please allow camera access in your browser.", variant: "destructive" });
       }
-      
-      // Continue loop sequentially
-      if (isRunning) requestAnimationFrame(loop);
     };
 
-    const loop = () => {
-      fetchFrame();
-    };
-
-    loop(); // immediate start
+    startCameraAndLoop();
 
     return () => {
       isRunning = false;
-      abortController.abort();
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
     };
   }, [agentState.running, agentState.paused]);
 
@@ -240,13 +256,14 @@ const LiveSession = () => {
               {agentState.running ? (
                 <>
                   {/* Live Video Feed */}
-                  {frameUrl && videoAvailable && (
-                    <img
-                      src={frameUrl}
-                      alt="Live Video Feed"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  )}
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`absolute inset-0 w-full h-full object-cover ${!videoAvailable ? 'hidden' : ''}`}
+                  />
+                  <canvas ref={canvasRef} className="hidden" />
 
                   {!videoAvailable && (
                     <div className="text-center z-0">
