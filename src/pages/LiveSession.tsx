@@ -27,6 +27,7 @@ const LiveSession = () => {
   const [metrics, setMetrics] = useState<any>(null);
   const [agentState, setAgentState] = useState<{ running: boolean; paused: boolean }>({ running: false, paused: false });
   const [videoAvailable, setVideoAvailable] = useState(true);
+  const [frameUrl, setFrameUrl] = useState<string | undefined>(undefined);
   const [sessionDuration, setSessionDuration] = useState("00:00:00");
   const { toast } = useToast();
 
@@ -84,6 +85,63 @@ const LiveSession = () => {
       }
     };
   }, []);
+
+  // Frame fetcher effect for live video
+  useEffect(() => {
+    if (!agentState.running || agentState.paused) {
+      if (frameUrl) {
+        URL.revokeObjectURL(frameUrl);
+        setFrameUrl(undefined);
+      }
+      return;
+    }
+
+    let abortController = new AbortController();
+    
+    const fetchFrame = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE_URL}/frame`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true"
+          },
+          signal: abortController.signal
+        });
+
+        if (res.status === 204) {
+          // No frame yet
+          setVideoAvailable(false);
+          return;
+        }
+
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          setFrameUrl(prev => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+          setVideoAvailable(true);
+        } else {
+          setVideoAvailable(false);
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error("Frame fetch error:", err);
+          setVideoAvailable(false);
+        }
+      }
+    };
+
+    fetchFrame(); // immediate start
+    const intervalId = setInterval(fetchFrame, 150); // ~6.6 FPS
+
+    return () => {
+      clearInterval(intervalId);
+      abortController.abort();
+    };
+  }, [agentState.running, agentState.paused]);
 
   const liveData = metrics?.liveMetrics || initialLiveMetrics;
 
@@ -172,11 +230,13 @@ const LiveSession = () => {
               {agentState.running ? (
                 <>
                   {/* Live Video Feed */}
-                  <img
-                    src={`${API_BASE_URL}/video`}
-                    alt="Live Video Feed"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                  {frameUrl && videoAvailable && (
+                    <img
+                      src={frameUrl}
+                      alt="Live Video Feed"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  )}
 
                   {!videoAvailable && (
                     <div className="text-center z-0">
