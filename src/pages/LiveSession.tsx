@@ -97,8 +97,10 @@ const LiveSession = () => {
     }
 
     let abortController = new AbortController();
+    let isRunning = true;
     
     const fetchFrame = async () => {
+      if (!isRunning) return;
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(`${API_BASE_URL}/frame`, {
@@ -112,6 +114,8 @@ const LiveSession = () => {
         if (res.status === 204) {
           // No frame yet
           setVideoAvailable(false);
+          // Wait briefly before retrying if no frame
+          if (isRunning) setTimeout(loop, 100);
           return;
         }
 
@@ -132,13 +136,19 @@ const LiveSession = () => {
           setVideoAvailable(false);
         }
       }
+      
+      // Continue loop sequentially
+      if (isRunning) requestAnimationFrame(loop);
     };
 
-    fetchFrame(); // immediate start
-    const intervalId = setInterval(fetchFrame, 150); // ~6.6 FPS
+    const loop = () => {
+      fetchFrame();
+    };
+
+    loop(); // immediate start
 
     return () => {
-      clearInterval(intervalId);
+      isRunning = false;
       abortController.abort();
     };
   }, [agentState.running, agentState.paused]);
