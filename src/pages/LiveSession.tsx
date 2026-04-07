@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Radio, Eye, Activity, AlertTriangle, Zap, Clock } from "lucide-react";
 
+
+
 const emotionColors: Record<string, string> = {
   Focus: "text-primary",
   Joy: "text-success",
@@ -172,13 +174,8 @@ const LiveSession = () => {
                   {/* Live Video Feed */}
                   <img
                     src={`${API_BASE_URL}/video`}
-                    alt="Live Camera Feed"
+                    alt="Live Video Feed"
                     className="absolute inset-0 w-full h-full object-cover"
-                    onLoad={() => setVideoAvailable(true)}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      setVideoAvailable(false);
-                    }}
                   />
 
                   {!videoAvailable && (
@@ -211,3 +208,5 @@ const LiveSession = () => {
 };
 
 export default LiveSession;
+
+
