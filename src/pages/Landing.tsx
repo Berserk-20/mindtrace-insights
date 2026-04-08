@@ -132,18 +132,18 @@ export default function Landing() {
               Resources
             </h2>
             <div className="mt-8 grid md:grid-cols-3 gap-6">
-              <div className="group p-6 rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent hover:from-purple-500/10 hover:border-purple-400/40 transition-all backdrop-blur-sm">
-                <p className="font-semibold text-lg text-purple-600">API</p>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">FastAPI endpoints for metrics and session control.</p>
-              </div>
-              <div className="group p-6 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-transparent hover:from-cyan-500/10 hover:border-cyan-400/40 transition-all backdrop-blur-sm">
-                <p className="font-semibold text-lg text-cyan-600">Frontend</p>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">React + Vite + Tailwind UI with live charts and controls.</p>
-              </div>
-              <div className="group p-6 rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent hover:from-blue-500/10 hover:border-blue-400/40 transition-all backdrop-blur-sm">
-                <p className="font-semibold text-lg text-blue-600">Background Agent</p>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">MediaPipe-based face detection and emotion inference.</p>
-              </div>
+              <a href="https://mindtrace-insights.vercel.app" target="_blank" rel="noopener noreferrer" className="group p-6 rounded-xl border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent hover:from-purple-500/10 hover:border-purple-400/40 transition-all backdrop-blur-sm">
+                <p className="font-semibold text-lg text-purple-600">🚀 Live App</p>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">Access MindTrace directly — no installation needed. Sign up and start a session instantly.</p>
+              </a>
+              <a href="https://huggingface.co/spaces/GaikwadSankalp-1424/mindtrace-backend" target="_blank" rel="noopener noreferrer" className="group p-6 rounded-xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-transparent hover:from-cyan-500/10 hover:border-cyan-400/40 transition-all backdrop-blur-sm">
+                <p className="font-semibold text-lg text-cyan-600">⚙️ Backend API</p>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">FastAPI backend powered by ResNet18 + MediaPipe, deployed on Hugging Face Spaces.</p>
+              </a>
+              <a href="https://github.com/Berserk-20" target="_blank" rel="noopener noreferrer" className="group p-6 rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent hover:from-blue-500/10 hover:border-blue-400/40 transition-all backdrop-blur-sm">
+                <p className="font-semibold text-lg text-blue-600">💻 GitHub</p>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">Explore the full source code — frontend, backend, and trained emotion detection model.</p>
+              </a>
             </div>
           </div>
         </section>
@@ -157,19 +157,23 @@ export default function Landing() {
             <ol className="mt-6 space-y-4 text-muted-foreground">
               <li className="flex gap-3">
                 <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 font-semibold text-sm">1</span>
-                <span className="pt-1">Start backend: <span className="font-mono text-sm bg-muted px-2 py-1 rounded text-cyan-600">python -m uvicorn api:app --reload --host 127.0.0.1 --port 8000</span></span>
+                <span className="pt-1">Visit <a href="https://mindtrace-insights.vercel.app" className="text-cyan-600 underline underline-offset-2 hover:text-cyan-500">mindtrace-insights.vercel.app</a> and <span className="font-medium text-foreground">Sign Up</span> or Log in.</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 font-semibold text-sm">2</span>
-                <span className="pt-1">Start frontend: <span className="font-mono text-sm bg-muted px-2 py-1 rounded text-cyan-600">npm run dev</span></span>
+                <span className="pt-1"><span className="font-medium text-foreground">Allow camera access</span> when the browser prompts — MindTrace uses your webcam for real-time emotion detection.</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 font-semibold text-sm">3</span>
-                <span className="pt-1">Click Get started to login, then open Live Session.</span>
+                <span className="pt-1">Navigate to <span className="font-medium text-foreground">Live Session</span> and click <span className="font-medium text-foreground">Start</span> — your face will be detected and emotions labeled in real time.</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 font-semibold text-sm">4</span>
-                <span className="pt-1">Use Start/Pause/Resume/Stop to control the session.</span>
+                <span className="pt-1">Use <span className="font-medium text-foreground">Pause / Resume / Stop</span> to control the session. Your data is saved automatically.</span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 font-semibold text-sm">5</span>
+                <span className="pt-1">After stopping, visit the <span className="font-medium text-foreground">Dashboard</span> to review your emotion timeline, engagement scores, and full session history.</span>
               </li>
             </ol>
           </div>
