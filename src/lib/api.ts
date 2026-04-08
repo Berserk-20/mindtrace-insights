@@ -1,6 +1,6 @@
 
 // Use environment variable for production, fallback to localhost for dev
-export const API_BASE_URL ="https://iracund-placidly-van.ngrok-free.dev";
+export const API_BASE_URL = "https://gaikwadsankalp-1424-mindtrace-backend.hf.space";
 
 /**
  * Get authorization headers with JWT token
