@@ -259,7 +259,7 @@ const LiveSession = () => {
             }
           }
 
-          if (active) setTimeout(loop, 1000); // 1 FPS
+          if (active) setTimeout(loop, 500); // 2 FPS
         };
 
         loop();
