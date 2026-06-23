@@ -19,6 +19,7 @@ interface AdminStats {
         role: string;
         total_sessions: number;
         total_emotions: number;
+        active_sessions: number;
     }>;
 }
 
@@ -162,10 +163,17 @@ export function AdminDashboard() {
                                     <td className="px-6 py-4 text-muted-foreground">{user.total_sessions}</td>
                                     <td className="px-6 py-4 text-muted-foreground">{user.total_emotions}</td>
                                     <td className="px-6 py-4">
-                                        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            Active
-                                        </span>
+                                        {user.active_sessions > 0 ? (
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                Active
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full border border-border">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+                                                Offline
+                                            </span>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
