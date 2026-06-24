@@ -261,11 +261,20 @@ const LiveSession = () => {
                   if (result.focus_score < 40 && result.face_found) {
                     lowFocusCount.current += 1;
                     if (lowFocusCount.current >= 10 && (Date.now() - lastAlertTime.current > 15000)) {
+                      const alertTitle = "Low Engagement Detected";
+                      const alertBody = "Your focus dropped significantly. Please face the camera and stay focused.";
+                      
                       toast({
-                        title: "Low Engagement Detected",
-                        description: "Your focus dropped significantly. Please face the camera and stay focused.",
+                        title: alertTitle,
+                        description: alertBody,
                         variant: "destructive"
                       });
+                      
+                      // Trigger OS-level desktop notification
+                      if ("Notification" in window && Notification.permission === "granted") {
+                        new Notification(alertTitle, { body: alertBody });
+                      }
+
                       lowFocusCount.current = 0;
                       lastAlertTime.current = Date.now();
                     }
@@ -354,6 +363,11 @@ const LiveSession = () => {
             <Button
               size="sm"
               onClick={async () => {
+                // Request OS Notification permission if not already granted/denied
+                if ("Notification" in window && Notification.permission === "default") {
+                  await Notification.requestPermission();
+                }
+
                 try {
                   const res = await startSession();
                   if (res && res.agent_running) {
