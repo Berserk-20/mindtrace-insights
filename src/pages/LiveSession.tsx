@@ -48,6 +48,10 @@ const LiveSession = () => {
   const overlayRef  = useRef<HTMLCanvasElement>(null); // visible, drawn on top of video
   const runningRef  = useRef(false);
   const streamRef   = useRef<MediaStream | null>(null);
+  
+  // Ref for tracking consecutive low focus frames and alert cooldown
+  const lowFocusCount = useRef(0);
+  const lastAlertTime = useRef(0);
 
   // Keep runningRef in sync so cleanup closures can read it
   useEffect(() => {
@@ -252,6 +256,22 @@ const LiveSession = () => {
                   const result: AnalysisResult = await res.json();
                   setLastResult(result);
                   drawOverlay(result);
+
+                  // LIVE ALERT LOGIC: Trigger notification if focus drops below 40 for 5 seconds (10 frames at 2 FPS)
+                  if (result.focus_score < 40 && result.face_found) {
+                    lowFocusCount.current += 1;
+                    if (lowFocusCount.current >= 10 && (Date.now() - lastAlertTime.current > 15000)) {
+                      toast({
+                        title: "Low Engagement Detected",
+                        description: "Your focus dropped significantly. Please face the camera and stay focused.",
+                        variant: "destructive"
+                      });
+                      lowFocusCount.current = 0;
+                      lastAlertTime.current = Date.now();
+                    }
+                  } else if (result.focus_score >= 40) {
+                    lowFocusCount.current = 0;
+                  }
                 }
               } catch (e) {
                 console.error("Frame analysis error:", e);
@@ -263,12 +283,22 @@ const LiveSession = () => {
         };
 
         loop();
-      } catch (err) {
+      } catch (err: any) {
         console.error("Camera error:", err);
         setVideoAvailable(false);
+        
+        let errorMessage = "Please allow camera access in browser settings.";
+        if (err.name === "NotReadableError") {
+          errorMessage = "Camera is already in use by another application (like Zoom or another browser).";
+        } else if (err.name === "NotFoundError") {
+          errorMessage = "No camera device found on this system.";
+        } else if (err.message) {
+          errorMessage = `Error: ${err.message}. Check Brave Shields/Fingerprinting settings.`;
+        }
+
         toast({
-          title: "Camera access denied",
-          description: "Please allow camera access in browser settings.",
+          title: "Camera access failed",
+          description: errorMessage,
           variant: "destructive"
         });
       }
