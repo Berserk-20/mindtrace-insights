@@ -8,23 +8,23 @@ import { Radio, Activity, AlertTriangle, Zap, Eye } from "lucide-react";
 
 // Emotion → color mapping (matches RAF-DB classes from background_agent.py)
 const EMOTION_COLORS: Record<string, string> = {
-  Happy:    "#22c55e", // green
-  Neutral:  "#94a3b8", // slate
+  Happy: "#22c55e", // green
+  Neutral: "#94a3b8", // slate
   Surprise: "#f59e0b", // amber
-  Angry:    "#ef4444", // red
-  Sad:      "#6366f1", // indigo
-  Fear:     "#a855f7", // purple
-  Disgust:  "#f97316", // orange
+  Angry: "#ef4444", // red
+  Sad: "#6366f1", // indigo
+  Fear: "#a855f7", // purple
+  Disgust: "#f97316", // orange
 };
 
 const EMOTION_BG: Record<string, string> = {
-  Happy:    "bg-green-500/20 text-green-400 border-green-500/40",
-  Neutral:  "bg-slate-500/20 text-slate-400 border-slate-500/40",
+  Happy: "bg-green-500/20 text-green-400 border-green-500/40",
+  Neutral: "bg-slate-500/20 text-slate-400 border-slate-500/40",
   Surprise: "bg-amber-500/20 text-amber-400 border-amber-500/40",
-  Angry:    "bg-red-500/20 text-red-400 border-red-500/40",
-  Sad:      "bg-indigo-500/20 text-indigo-400 border-indigo-500/40",
-  Fear:     "bg-purple-500/20 text-purple-400 border-purple-500/40",
-  Disgust:  "bg-orange-500/20 text-orange-400 border-orange-500/40",
+  Angry: "bg-red-500/20 text-red-400 border-red-500/40",
+  Sad: "bg-indigo-500/20 text-indigo-400 border-indigo-500/40",
+  Fear: "bg-purple-500/20 text-purple-400 border-purple-500/40",
+  Disgust: "bg-orange-500/20 text-orange-400 border-orange-500/40",
 };
 
 interface AnalysisResult {
@@ -43,12 +43,12 @@ const LiveSession = () => {
   const [lastResult, setLastResult] = useState<AnalysisResult | null>(null);
   const { toast } = useToast();
 
-  const videoRef    = useRef<HTMLVideoElement>(null);
-  const captureRef  = useRef<HTMLCanvasElement>(null); // hidden, for grabbing frames
-  const overlayRef  = useRef<HTMLCanvasElement>(null); // visible, drawn on top of video
-  const runningRef  = useRef(false);
-  const streamRef   = useRef<MediaStream | null>(null);
-  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const captureRef = useRef<HTMLCanvasElement>(null); // hidden, for grabbing frames
+  const overlayRef = useRef<HTMLCanvasElement>(null); // visible, drawn on top of video
+  const runningRef = useRef(false);
+  const streamRef = useRef<MediaStream | null>(null);
+
   // Ref for tracking consecutive low focus frames and alert cooldown
   const lowFocusCount = useRef(0);
   const lastAlertTime = useRef(0);
@@ -70,7 +70,7 @@ const LiveSession = () => {
       const h = Math.floor(elapsed / 3600);
       const m = Math.floor((elapsed % 3600) / 60);
       const s = elapsed % 60;
-      setSessionDuration(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+      setSessionDuration(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
     };
     update();
     const id = setInterval(update, 1000);
@@ -93,7 +93,7 @@ const LiveSession = () => {
     return () => {
       clearInterval(id);
       if (runningRef.current) {
-        stopSession().catch(() => {});
+        stopSession().catch(() => { });
       }
     };
   }, []);
@@ -101,11 +101,11 @@ const LiveSession = () => {
   // ── Draw overlay function ─────────────────────────────────────────────────
   const drawOverlay = (result: AnalysisResult | null) => {
     const overlay = overlayRef.current;
-    const video   = videoRef.current;
+    const video = videoRef.current;
     if (!overlay || !video) return;
 
     // Match canvas size to displayed video element
-    overlay.width  = video.clientWidth;
+    overlay.width = video.clientWidth;
     overlay.height = video.clientHeight;
 
     const ctx = overlay.getContext("2d");
@@ -115,20 +115,20 @@ const LiveSession = () => {
     if (!result || !result.face_found || !result.bbox) return;
 
     const { x, y, width, height } = result.bbox;
-    const bx = x      * overlay.width;
-    const by = y      * overlay.height;
-    const bw = width  * overlay.width;
+    const bx = x * overlay.width;
+    const by = y * overlay.height;
+    const bw = width * overlay.width;
     const bh = height * overlay.height;
 
     const color = EMOTION_COLORS[result.emotion] ?? "#ffffff";
 
     // --- Bounding box ---
     ctx.strokeStyle = color;
-    ctx.lineWidth   = 2.5;
+    ctx.lineWidth = 2.5;
     ctx.shadowColor = color;
-    ctx.shadowBlur  = 8;
+    ctx.shadowBlur = 8;
     ctx.strokeRect(bx, by, bw, bh);
-    ctx.shadowBlur  = 0;
+    ctx.shadowBlur = 0;
 
     // Corner accents (like OpenCV rectangle)
     const cornerLen = Math.min(bw, bh) * 0.12;
@@ -140,7 +140,7 @@ const LiveSession = () => {
       [bx + bw - cornerLen, by + bh - cornerLen, cornerLen, cornerLen], // bottom-right
     ];
     corners.forEach(([cx, cy, cl, _]) => {
-      const isRight  = cx > bx;
+      const isRight = cx > bx;
       const isBottom = cy > by;
       ctx.beginPath();
       ctx.moveTo(cx, cy + (isBottom ? -cl : cl));
@@ -152,13 +152,13 @@ const LiveSession = () => {
 
     // --- Label background (above the box) ---
     const emotion = result.emotion;
-    const conf    = Math.round(result.confidence * 100);
-    const label   = `${emotion}  ${conf}%`;
+    const conf = Math.round(result.confidence * 100);
+    const label = `${emotion}  ${conf}%`;
     const fontSize = Math.max(13, Math.min(18, bw / 8));
     ctx.font = `bold ${fontSize}px Inter, sans-serif`;
 
     const textW = ctx.measureText(label).width;
-    const padX  = 10, padY = 6;
+    const padX = 10, padY = 6;
     const labelH = fontSize + padY * 2;
     const labelX = bx;
     const labelY = by - labelH - 2;
@@ -174,10 +174,10 @@ const LiveSession = () => {
     ctx.fillText(label, labelX + padX, labelY + labelH - padY - 1);
 
     // --- Focus score bar (below the box) ---
-    const barW  = bw;
-    const barH  = 5;
-    const barX  = bx;
-    const barY  = by + bh + 6;
+    const barW = bw;
+    const barH = 5;
+    const barX = bx;
+    const barY = by + bh + 6;
     const fillW = (result.focus_score / 100) * barW;
 
     ctx.fillStyle = "rgba(0,0,0,0.4)";
@@ -224,17 +224,17 @@ const LiveSession = () => {
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play().catch(() => {});
+          await videoRef.current.play().catch(() => { });
         }
         setVideoAvailable(true);
 
         const loop = async () => {
           if (!active) return;
 
-          const video   = videoRef.current;
+          const video = videoRef.current;
           const capture = captureRef.current;
           if (video && capture && video.videoWidth > 0) {
-            capture.width  = video.videoWidth;
+            capture.width = video.videoWidth;
             capture.height = video.videoHeight;
             const ctx = capture.getContext("2d");
             if (ctx) {
@@ -261,15 +261,15 @@ const LiveSession = () => {
                   if (result.focus_score < 40 && result.face_found) {
                     lowFocusCount.current += 1;
                     if (lowFocusCount.current >= 10 && (Date.now() - lastAlertTime.current > 15000)) {
-                      const alertTitle = "Low Engagement Detected";
-                      const alertBody = "Your focus dropped significantly. Please face the camera and stay focused.";
-                      
+                      const alertTitle = "Low Focus Detected";
+                      const alertBody = "It feels like you might be tired. Please take a short break to relax and recharge.";
+
                       toast({
                         title: alertTitle,
                         description: alertBody,
                         variant: "destructive"
                       });
-                      
+
                       // Trigger OS-level desktop notification
                       if ("Notification" in window && Notification.permission === "granted") {
                         new Notification(alertTitle, { body: alertBody });
@@ -295,14 +295,14 @@ const LiveSession = () => {
       } catch (err: any) {
         console.error("Camera error:", err);
         setVideoAvailable(false);
-        
+
         let errorMessage = "Please allow camera access in browser settings.";
         if (err.name === "NotReadableError") {
           errorMessage = "Camera is already in use by another application (like Zoom or another browser).";
         } else if (err.name === "NotFoundError") {
           errorMessage = "No camera device found on this system.";
         } else if (err.message) {
-          errorMessage = `Error: ${err.message}. Check Brave Shields/Fingerprinting settings.`;
+          errorMessage = `Error: ${err.message}. Please check browser settings.`;
         }
 
         toast({
@@ -333,7 +333,7 @@ const LiveSession = () => {
 
   const liveData = metrics?.liveMetrics || initialLiveMetrics;
   const currentEmotion = liveData?.currentEmotion ?? "Neutral";
-  const emotionBadge   = EMOTION_BG[currentEmotion] ?? EMOTION_BG["Neutral"];
+  const emotionBadge = EMOTION_BG[currentEmotion] ?? EMOTION_BG["Neutral"];
 
   return (
     <div className="min-h-screen">
